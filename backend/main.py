@@ -2,12 +2,14 @@
 import requests
 import os
 import json
+import base64
 from concurrent.futures import ThreadPoolExecutor
 
 MAX_PER_FILE = 30
 MAX_FILES = 10
 THREADS = 10
-WORK_DIR = "proxies"
+PROXY_DIR = "proxies"
+DISPLAY_DIR = "display"
 SOURCE_URLS = [
     "https://openproxylist.com/v2ray/",
     "https://raw.githubusercontent.com/freefq/free/master/v2",
@@ -15,7 +17,9 @@ SOURCE_URLS = [
     "https://raw.githubusercontent.com/learnhard-cn/free_proxy_ss/main/v2ray.txt",
     "https://raw.githubusercontent.com/aiboboxx/v2rayfree/main/v2",
     "https://raw.githubusercontent.com/mfuu/v2ray/master/v2ray",
-    "https://raw.githubusercontent.com/Alvin9999/v2ray/master/v2ray.txt"
+    "https://raw.githubusercontent.com/Alvin9999/v2ray/master/v2ray.txt",
+    "https://raw.githubusercontent.com/Pawdroid/Free-servers/main/vless",
+    "https://raw.githubusercontent.com/peasoft/NoMoreWalls/master/list_raw.txt"
 ]
 
 GITHUB_SOURCE_LINE = "📎 Source: https://github.com/yourusername/yourrepo"
@@ -27,15 +31,19 @@ def fetch_proxies():
             res = requests.get(url, timeout=10)
             if res.status_code == 200:
                 lines = res.text.strip().splitlines()
-                proxies.extend([line for line in lines if line.startswith("vless://")])
+                proxies.extend([line for line in lines if line.startswith("vless://") or line.startswith("vmess://")])
         except:
             continue
     return list(set(proxies))
 
-def get_ip_from_vless(vless_link):
+def get_ip_from_link(link):
     try:
-        host = vless_link.split("@")[1].split(":")[0]
-        return host
+        if link.startswith("vless://"):
+            return link.split("@")[1].split(":")[0]
+        elif link.startswith("vmess://"):
+            raw = base64.b64decode(link.replace("vmess://", "") + "==").decode(errors="ignore")
+            data = json.loads(raw)
+            return data.get("add", "")
     except:
         return ""
 
@@ -50,7 +58,7 @@ def get_country_emoji(ip):
     return "🌐"
 
 def decorate_proxy(proxy):
-    ip = get_ip_from_vless(proxy)
+    ip = get_ip_from_link(proxy)
     flag = get_country_emoji(ip)
     return f"{flag} {proxy} 🔒 by alirahmti"
 
@@ -59,23 +67,34 @@ def process_proxies(proxies):
         decorated = list(pool.map(decorate_proxy, proxies))
     return decorated
 
-def write_subscriptions(decorated):
-    os.makedirs(WORK_DIR, exist_ok=True)
+def write_outputs(raw_proxies, decorated):
+    os.makedirs(PROXY_DIR, exist_ok=True)
+    os.makedirs(DISPLAY_DIR, exist_ok=True)
+
     for i in range(MAX_FILES):
-        chunk = decorated[i * MAX_PER_FILE:(i + 1) * MAX_PER_FILE]
-        if not chunk:
+        chunk_raw = raw_proxies[i * MAX_PER_FILE:(i + 1) * MAX_PER_FILE]
+        chunk_pretty = decorated[i * MAX_PER_FILE:(i + 1) * MAX_PER_FILE]
+        if not chunk_raw:
             break
-        output = [GITHUB_SOURCE_LINE] + chunk
-        with open(f"{WORK_DIR}/sub{i+1}.txt", "w") as f:
-            f.write("\n".join(output))
-        print(f"[+] sub{i+1}.txt written with {len(chunk)} proxies")
+
+        # File for app (Base64 encoded)
+        base64_content = base64.b64encode("\n".join(chunk_raw).encode()).decode()
+        with open(f"{PROXY_DIR}/sub{i+1}.txt", "w") as f:
+            f.write(base64_content)
+
+        # File for display (human readable)
+        display_content = [GITHUB_SOURCE_LINE] + chunk_pretty
+        with open(f"{DISPLAY_DIR}/sub{i+1}.txt", "w") as f:
+            f.write("\n".join(display_content))
+
+        print(f"[+] sub{i+1}.txt written → proxies/ (app) and display/ (pretty)")
 
 def main():
-    print("[*] Fetching vless proxies...")
+    print("[*] Fetching proxies...")
     raw = fetch_proxies()
-    print(f"[*] Found {len(raw)} vless proxies. Decorating...")
+    print(f"[*] Found {len(raw)} total proxies. Decorating...")
     decorated = process_proxies(raw)
-    write_subscriptions(decorated)
+    write_outputs(raw, decorated)
 
 if __name__ == "__main__":
     main()
