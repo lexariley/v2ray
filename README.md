@@ -12,4 +12,3 @@ https://raw.githubusercontent.com/yourusername/yourrepo/main/proxies/sub1.txt
 https://yourusername.github.io/yourrepo/
 ```
 
-> ساخته شده با ❤️ توسط alirahmti
