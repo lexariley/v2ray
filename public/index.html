@@ -1,0 +1,106 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>V2Ray Subscriptions</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #121212;
+      color: #ffffff;
+      transition: background 0.3s, color 0.3s;
+    }
+    .container {
+      padding: 30px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2em;
+    }
+    .language-switch, .theme-switch {
+      margin: 15px;
+    }
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .link-box {
+      background: #1f1f1f;
+      padding: 15px;
+      border-radius: 10px;
+      transition: 0.3s;
+      width: 220px;
+    }
+    .link-box:hover {
+      background: #333333;
+    }
+    a {
+      color: #00d8ff;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .dark-mode {
+      background-color: #121212;
+      color: #ffffff;
+    }
+    .light-mode {
+      background-color: #f2f2f2;
+      color: #000000;
+    }
+    button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      background-color: #00d8ff;
+      color: #fff;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body class="dark-mode">
+  <div class="container">
+    <h1 id="title">📡 V2Ray Subscription Links</h1>
+    <div>
+      <button class="theme-switch" onclick="toggleTheme()">🌗 Toggle Theme</button>
+      <button class="language-switch" onclick="toggleLanguage()">🌍 زبان / Language</button>
+    </div>
+    <p id="description">Click a link below to use it in your V2Ray mobile app.</p>
+    <div class="links" id="links"></div>
+  </div>
+
+  <script>
+    const linkCount = 10;
+    const linksDiv = document.getElementById("links");
+    const base = "proxies/sub";
+    for (let i = 1; i <= linkCount; i++) {
+      const box = document.createElement("div");
+      box.className = "link-box";
+      box.innerHTML = `<a href="${base + i}.txt" target="_blank">📡 Subscription ${i}</a>`;
+      linksDiv.appendChild(box);
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle("light-mode");
+      document.body.classList.toggle("dark-mode");
+    }
+
+    function toggleLanguage() {
+      const current = document.getElementById("title").innerText;
+      if (current.includes("Subscription")) {
+        document.getElementById("title").innerText = "📡 لینک‌های اشتراک V2Ray";
+        document.getElementById("description").innerText = "روی یکی از لینک‌ها کلیک کنید و در اپ V2Ray وارد کنید.";
+      } else {
+        document.getElementById("title").innerText = "📡 V2Ray Subscription Links";
+        document.getElementById("description").innerText = "Click a link below to use it in your V2Ray mobile app.";
+      }
+    }
+  </script>
+</body>
+</html>
