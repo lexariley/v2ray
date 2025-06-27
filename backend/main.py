@@ -1,8 +1,7 @@
 
 import requests
-import base64
-import json
 import os
+import json
 from concurrent.futures import ThreadPoolExecutor
 
 MAX_PER_FILE = 30
@@ -28,16 +27,15 @@ def fetch_proxies():
             res = requests.get(url, timeout=10)
             if res.status_code == 200:
                 lines = res.text.strip().splitlines()
-                proxies.extend([line for line in lines if line.startswith("vmess://")])
+                proxies.extend([line for line in lines if line.startswith("vless://")])
         except:
             continue
     return list(set(proxies))
 
-def get_ip_from_vmess(vmess_link):
+def get_ip_from_vless(vless_link):
     try:
-        vmess_json = base64.b64decode(vmess_link.replace("vmess://", "") + "==").decode(errors="ignore")
-        data = json.loads(vmess_json)
-        return data.get("add", "")
+        host = vless_link.split("@")[1].split(":")[0]
+        return host
     except:
         return ""
 
@@ -52,7 +50,7 @@ def get_country_emoji(ip):
     return "🌐"
 
 def decorate_proxy(proxy):
-    ip = get_ip_from_vmess(proxy)
+    ip = get_ip_from_vless(proxy)
     flag = get_country_emoji(ip)
     return f"{flag} {proxy} 🔒 by alirahmti"
 
@@ -68,15 +66,14 @@ def write_subscriptions(decorated):
         if not chunk:
             break
         output = [GITHUB_SOURCE_LINE] + chunk
-        b64 = base64.b64encode("\n".join(output).encode()).decode()
         with open(f"{WORK_DIR}/sub{i+1}.txt", "w") as f:
-            f.write(b64)
+            f.write("\n".join(output))
         print(f"[+] sub{i+1}.txt written with {len(chunk)} proxies")
 
 def main():
-    print("[*] Fetching...")
+    print("[*] Fetching vless proxies...")
     raw = fetch_proxies()
-    print(f"[*] Got {len(raw)} proxies. Processing...")
+    print(f"[*] Found {len(raw)} vless proxies. Decorating...")
     decorated = process_proxies(raw)
     write_subscriptions(decorated)
 
